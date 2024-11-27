@@ -1,50 +1,79 @@
 # React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Modulos de CSS
+Cuando se trabaja con modulos es necesario crear el archivo App.module.css, importar en el componente y en la etiqueta qie se desea aplicar estilos se
+se llama como si fuera un objeto
 
-Currently, two official plugins are available:
+```ts
+import styles from"./App.module.css"
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+<h1 className={styles.title}>Buscador</h1>
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### Variables de entorno
+Para acceder a las variables de entorno en vite, en necesario que estén nombradas con VITE
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```ts
+import.meta.env.VITE_nombre
 ```
+
+### Validacion de Tipado con nuestra API
+
+Para hacer una validación al .json que nos devuelve nuestra api, si la hemos tipado correctamente.
+
+#### Zod
+
+Crea un tipado utilizando "z", es sencillo de utilizar
+
+Desventajas:
+
+** No es modular 
+** Se vuelve pesado al importarlo en diferentes archivos
+
+```bash
+npm i zod
+```
+
+```ts
+import { z } from "zod"
+
+
+// Tipado con Zod
+const Weather = z.object({
+    name: z.string(),
+    main: z.object({
+        temp: z.number(),
+        temp_max: z.number(),
+        temp_min: z.number()
+    })
+})
+
+type Weather = z.infer<typeof Weather>
+
+//En la seccion de llamado a la API
+
+ const fetchWeather = async (search: SearchType) => {
+
+        try {
+            const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/...`
+
+            const { data: currentWeather } = await axios(currentWeatherUrl)
+
+            // Verifica el tipado Zod con el json de la API
+            const result = Weather.safeParse(currentWeather)
+
+            if (result.success) {
+                console.log(result.data.name)
+                console.log(result.data.main.temp)
+            } else {
+                console.log('Respuesta mal formada')
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+```
+
+

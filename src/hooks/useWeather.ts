@@ -1,8 +1,9 @@
+import { object, string, number, InferOutput, parse } from 'valibot'
 import axios from "axios"
 import { SearchType } from "../types"
-import { z } from "zod"
+//import { z } from "zod"
 
-
+/*
 // Zod
 const Weather = z.object({
     name: z.string(),
@@ -14,7 +15,18 @@ const Weather = z.object({
 })
 
 type Weather = z.infer<typeof Weather>
+*/
 
+const WeatherSchema = object({
+    name: string(),
+    main: object({
+        temp: number(),
+        temp_max: number(),
+        temp_min: number()
+    })
+})
+
+type Weather = InferOutput<typeof WeatherSchema>
 
 export default function useWeather() {
 
@@ -25,7 +37,7 @@ export default function useWeather() {
 
 
         try {
-            
+
             const { data } = await axios(geoUrl)
 
             const { lat, lon } = data[0]
@@ -34,7 +46,7 @@ export default function useWeather() {
 
             const { data: currentWeather } = await axios(currentWeatherUrl)
 
-            
+            /* ZOD
             const result = Weather.safeParse(currentWeather)
 
             if (result.success) {
@@ -43,6 +55,18 @@ export default function useWeather() {
             } else {
                 console.log('Respuesta mal formada')
             }
+            */
+
+           // Valibot
+            const result = parse(WeatherSchema, currentWeather)            
+
+            if(result){
+                console.log(result.name)
+            }
+
+
+
+
 
         } catch (error) {
             console.log(error)

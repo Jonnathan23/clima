@@ -1,21 +1,8 @@
 import { object, string, number, InferOutput, parse } from 'valibot'
 import axios from "axios"
 import { SearchType } from "../types"
-//import { z } from "zod"
+import { useMemo, useState } from 'react'
 
-/*
-// Zod
-const Weather = z.object({
-    name: z.string(),
-    main: z.object({
-        temp: z.number(),
-        temp_max: z.number(),
-        temp_min: z.number()
-    })
-})
-
-type Weather = z.infer<typeof Weather>
-*/
 
 const WeatherSchema = object({
     name: string(),
@@ -25,20 +12,31 @@ const WeatherSchema = object({
         temp_min: number()
     })
 })
-
-type Weather = InferOutput<typeof WeatherSchema>
+const initialWeather: Weather = { name: '', main: { temp: 0, temp_max: 0, temp_min: 0 } }
+export type Weather = InferOutput<typeof WeatherSchema>
 
 export default function useWeather() {
+
+    const [weather, setWeather] = useState(initialWeather)
+    const [loading, setLoading] = useState(false)
+    const [notFound, setNotFound] = useState(false)
 
     const fetchWeather = async (search: SearchType) => {
 
         const appId = import.meta.env.VITE_API_KEY
-        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${appId}`
+        setLoading(true)
+        setWeather(initialWeather)
 
+        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${appId}`
 
         try {
 
             const { data } = await axios(geoUrl)
+
+            if (!data[0]) {
+                setNotFound(true)
+                return
+            }
 
             const { lat, lon } = data[0]
 
@@ -46,35 +44,26 @@ export default function useWeather() {
 
             const { data: currentWeather } = await axios(currentWeatherUrl)
 
-            /* ZOD
-            const result = Weather.safeParse(currentWeather)
+            // Valibot
+            const result = parse(WeatherSchema, currentWeather)
 
-            if (result.success) {
-                console.log(result.data.name)
-                console.log(result.data.main.temp)
-            } else {
-                console.log('Respuesta mal formada')
-            }
-            */
-
-           // Valibot
-            const result = parse(WeatherSchema, currentWeather)            
-
-            if(result){
-                console.log(result.name)
-            }
-
-
-
-
+            result && setWeather(result)
 
         } catch (error) {
             console.log(error)
+        } finally {
+            setLoading(false)
         }
     }
 
+    const hasWeatherData = useMemo(() => weather.name, [weather.name])
+
     return {
-        fetchWeather
+        weather,
+        fetchWeather,
+        hasWeatherData,
+        loading,
+        notFound
 
     }
 }

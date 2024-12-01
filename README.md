@@ -52,30 +52,64 @@ type Weather = z.infer<typeof Weather>
 
 //En la seccion de llamado a la API
 
- const fetchWeather = async (search: SearchType) => {
+const fetchWeather = async (search: SearchType) => {
 
-        try {
-            const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/...`
+    try {
+        const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/...`
 
-            const { data: currentWeather } = await axios(currentWeatherUrl)
+        const { data: currentWeather } = await axios(currentWeatherUrl)
 
-            // Verifica el tipado Zod con el json de la API
-            const result = Weather.safeParse(currentWeather)
+        // Verifica el tipado Zod con el json de la API
+        const result = Weather.safeParse(currentWeather)
 
-            if (result.success) {
-                console.log(result.data.name)
-                console.log(result.data.main.temp)
-            } else {
-                console.log('Respuesta mal formada')
-            }
-
-        } catch (error) {
-            console.log(error)
+        if (result.success) {
+            console.log(result.data.name)
+            console.log(result.data.main.temp)
+        } else {
+            console.log('Respuesta mal formada')
         }
+
+    } catch (error) {
+        console.log(error)
     }
+}
 
 ```
 
 
 #### Valibot
+Es modular
 
+```ts
+import { object, string, number, InferOutput, parse } from 'valibot'
+
+const WeatherSchema = object({
+    name: string(),
+    main: object({
+        temp: number(),
+        temp_max: number(),
+        temp_min: number()
+    })
+})
+
+type Weather = InferOutput<typeof WeatherSchema>
+
+
+const fetchWeather = async (search: SearchType) => {
+
+    try {
+        const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/...`
+
+        const { data: currentWeather } = await axios(currentWeatherUrl)
+
+       // Valibot
+        const result = parse(WeatherSchema, currentWeather)            
+
+        if(result){
+            console.log(result.name)
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+```

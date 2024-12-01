@@ -27,7 +27,7 @@ export default function useWeather() {
         setLoading(true)
         setWeather(initialWeather)
 
-        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${appId}`
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${appId}`
 
         try {
 
